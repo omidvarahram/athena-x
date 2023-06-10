@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "*": [
+        "*"
+      ]
+    },
+    "rootDir": "./",
+    "outDir": "./dist",
+    "module": "esnext",
+    "target": "esnext",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmitOnError": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitThis": false,
+    "importHelpers": true,
+    "allowSyntheticDefaultImports": true,
+    "suppressExcessPropertyErrors": true,
+    "esModuleInterop": true,
+    "isolatedModules": false,
+    "noEmit": false,
+    "removeComments": false,
+    "allowJs": false,
+    "noImplicitAny": false,
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "lib": ["dom","es2017","esnext"],
+    "resolveJsonModule": true
+  },
+  "exclude": ["**/demo","**/dist", "**/node_modules", "**/typings", "./*/**/*.test.ts", "./*/**/*.test.tsx"],
+  "include": ["./*/**/*.tsx", "./*/**/*.ts", "./*/**/*.d.ts", "*.d.ts", "./*/**/*.test.ts"]
+}

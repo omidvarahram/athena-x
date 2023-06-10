@@ -1,0 +1,52 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": ["airbnb-base", "plugin:prettier/recommended"],
+  "plugins": ["@typescript-eslint"],
+  "env": {
+    "jest": true
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  },
+  "parserOptions": {
+    "project": "./tsconfig.eslint.json"
+  },
+  "rules": {
+    "import/extensions": "off",
+    "no-undef": "off",
+    "no-unused-vars": "warn",
+    "no-restricted-globals": "off",
+    "no-useless-constructor": "warn",
+    "import/prefer-default-export": "off",
+    "import/no-extraneous-dependencies": "off",
+    "no-restricted-syntax": "off",
+    "max-classes-per-file": "off",
+    "no-plusplus": "off",
+    "class-methods-use-this": "off",
+    "no-dupe-class-members": "off",
+    "no-empty-function": "warn",
+    "consistent-return": "warn",
+    "@typescipt-eslint/naming-convention": [
+      "warn",
+      {
+        "selector": "interface",
+        "format": ["PascalCase"],
+        "custom": {
+          "regex": "^I[A-Z]",
+          "match": true
+        }
+      }
+    ],
+    "no-use-before-define": ["warn", {
+      "variable": true
+    }],
+    "no-shadow": "warn",
+    "no-redeclare": "warn",
+    "no-await-in-loop": "warn",
+    "no-continue": "warn"
+  }
+}
