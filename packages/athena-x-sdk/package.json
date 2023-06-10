@@ -1,6 +1,6 @@
 {
   "name": "athena-x-sdk",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Athena Typescript SDK",
   "files": [
     "dist",
