@@ -1,7 +1,6 @@
 {
-  "name": "$name$",
-  "version": "$version$",
+  "name": "athena-x-ui-library",
+  "version": "0.0.1",
   "dependencies": {
-    $END$
   }
 }

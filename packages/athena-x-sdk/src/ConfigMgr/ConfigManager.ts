@@ -1,18 +1,16 @@
-import {IAppConfig, IConfigManager, IConfiguration} from "./config";
+import {Environment, IAppConfig, IConfigManager} from "./config";
 
 export class ConfigManager implements IConfigManager {
     public static ConfigManagerInstance: ConfigManager | null = null;
-    private config: IAppConfig;
-    private readonly env: string;
+    private config?: IAppConfig;
 
-    constructor(env: string) {
-        this.env = env;
+    private constructor() {
     }
 
-    public static async CreateConfigManagerInstance(env: string, overrideConfig?: IAppConfig): Promise<ConfigManager> {
+    public static CreateConfigManagerInstance(prefix?: string, overrideConfig?: IAppConfig): ConfigManager {
         if (!this.ConfigManagerInstance) {
-            this.ConfigManagerInstance = new ConfigManager(env);
-            await this.ConfigManagerInstance.init(overrideConfig);
+            this.ConfigManagerInstance = new ConfigManager();
+            this.ConfigManagerInstance.init(prefix, overrideConfig);
         } else {
             console.warn('ConfigManager: ConfigManager is already initialised')
         }
@@ -20,33 +18,36 @@ export class ConfigManager implements IConfigManager {
         return this.ConfigManagerInstance
     }
 
-    private init(overridingConfig?: IAppConfig) {
-        const config: IAppConfig = JSON.parse(process.env[this.env] as string);
-
-        this.config = {
-            ...config,
-            ...overridingConfig
-        };
+    private init(prefix: string = '', overridingConfig?: IAppConfig) {
+        if (process.env[`${prefix}appName`] && process.env[`${prefix}environment`]) {
+            const config: IAppConfig = process.env as unknown as IAppConfig;
+            const normalizedConfig = !!prefix.length ? Object.keys(config)
+                .filter(key => key.startsWith(prefix))
+                .reduce((result, key) => {
+                    const newKey = key.replace(prefix, '');
+                    result[newKey] = config[key];
+                    return result;
+                }, {}) : config;
+            this.config = {
+                ...normalizedConfig,
+                ...overridingConfig
+            };
+        } else {
+            throw new Error('ConfigManager: appName and environment are mandatory. Please provide them in .env file')
+        }
     }
 
-    public get(key?: string): string | IConfiguration {
-        if(key === 'appName') {
-            return this.config?.appName;
+    public get env(): Environment {
+        return this.get('environment') as Environment
+    }
+
+    public get(key?: string): string | IAppConfig | undefined {
+        if (!key) {
+            return this.config;
         }
 
-        if(key === 'env') {
-            return this.env
-        }
-
-        if(!key) {
-            return this.config.configuration
-        }
-
-        const prefix = `${this.config?.appName}_`;
-
-        const prefixedKey = `${prefix}${key}`;
-        if (Object.keys(this.config.configuration[this.env]).includes(prefixedKey)) {
-            return this.config.configuration[this.env][`${prefixedKey}`];
+        if (this.config && Object.keys(this.config).includes(key)) {
+            return this.config[key];
         } else {
             console.error(`${key} not found.`)
         }

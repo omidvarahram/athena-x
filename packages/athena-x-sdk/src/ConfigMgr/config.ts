@@ -1,10 +1,10 @@
 export interface IConfigManager {
-    get(key: string): string| IConfiguration;
+    get(key: string): string| IAppConfig | undefined;
+    get env(): Environment;
 }
 
-export type Environment = 'production' | 'test' | 'development'
-export type IConfiguration = Record<Environment, Record<string, string>>
-export interface IAppConfig {
+export type Environment = 'production' | 'test' | 'development' | 'staging' | 'uat' | 'pilot' | 'pre' | 'perf'
+export interface IAppConfig extends Record<string, string> {
     appName: string;
-    configuration?: IConfiguration;
+    environment: Environment;
 }

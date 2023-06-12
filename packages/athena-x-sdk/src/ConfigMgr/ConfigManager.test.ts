@@ -1,98 +1,98 @@
-import { ConfigManager } from "./ConfigManager";
+import { ConfigManager } from './ConfigManager';
+import { Environment, IAppConfig } from './config';
+import * as process from "process";
 
-// Mock environment
-const mockEnv = {
-    appName: "TestApp",
-    configuration: {
-        prod: {
-            TestApp_url: "http://prod.api.com"
-        },
-        test: {
-            TestApp_url: "http://test.api.com"
-        },
-        dev: {
-            TestApp_url: "http://dev.api.com"
-        }
-    },
-};
-
-describe('ConfigManager', () => {
-    let originalEnv: NodeJS.ProcessEnv;
+describe('ConfigManager cases', () => {
+    const originalProcessEnv = process.env;
 
     beforeEach(() => {
-        // Store the original environment
-        originalEnv = { ...process.env };
-    });
+        process.env.appName = 'testApp';
+        process.env.environment = 'test';
+        process.env['TEST_KEY'] = 'TEST_VALUE';
+    })
 
     afterEach(() => {
-        // Restore the original environment
-        process.env = originalEnv;
-        jest.restoreAllMocks();
-        ConfigManager.ConfigManagerInstance = null;
+        Object.keys(process.env).forEach((key) => {
+                delete process.env[key];
+        });
+        Object.assign(process.env, originalProcessEnv);
     });
 
-    it('should create a new instance if one does not exist', async () => {
-        process.env['test'] = JSON.stringify(mockEnv);
-
-        const instance = await ConfigManager.CreateConfigManagerInstance('test');
-
+    it('should create a new instance if one does not exist', () => {
+        const instance = ConfigManager.CreateConfigManagerInstance();
         expect(instance).toBeInstanceOf(ConfigManager);
-        expect(instance['config']).toEqual(mockEnv);
     });
 
-    it('should not create a new instance if one already exists', async () => {
-        process.env['test'] = JSON.stringify(mockEnv);
-        const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-        await ConfigManager.CreateConfigManagerInstance('test');
-        await ConfigManager.CreateConfigManagerInstance('test');
-
-        expect(consoleWarnSpy).toBeCalledWith('ConfigManager: ConfigManager is already initialised');
+    it('should not create a new instance if one already exists', () => {
+        const firstInstance = ConfigManager.CreateConfigManagerInstance();
+        const secondInstance = ConfigManager.CreateConfigManagerInstance();
+        expect(firstInstance).toBe(secondInstance);
     });
 
-    it('should get the value of a given key', async () => {
-        process.env['test'] = JSON.stringify(mockEnv);
-
-        const instance = await ConfigManager.CreateConfigManagerInstance('test');
-        const value = instance.get('url');
-
-        expect(value).toBe(mockEnv.configuration.test['TestApp_url']);
+    it('should return the value of a given key', () => {
+        const instance = ConfigManager.CreateConfigManagerInstance();
+        expect(instance.get('TEST_KEY')).toBe('TEST_VALUE');
     });
 
-    it('should log an error if the key is not found', async () => {
-        process.env['test'] = JSON.stringify(mockEnv);
-        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
-        const instance = await ConfigManager.CreateConfigManagerInstance('test');
-        instance.get('nonexistentKey');
-
-        expect(consoleErrorSpy).toBeCalledWith('nonexistentKey not found.');
+    it('should return the config object without of a given key', () => {
+        const instance = ConfigManager.CreateConfigManagerInstance();
+        expect((instance.get() as IAppConfig).appName).toBe('testApp');
+        expect((instance.get() as IAppConfig).environment).toBe('test');
+        expect((instance.get() as IAppConfig)['TEST_KEY']).toBe('TEST_VALUE');
     });
 
-    it('should return the environment when "env" key is used', async () => {
-        process.env['test'] = JSON.stringify(mockEnv);
+    it('should return undefined if the key is not found', () => {
 
-        const instance = await ConfigManager.CreateConfigManagerInstance('test');
-        const env = instance.get('env');
-
-        expect(env).toBe('test');
+        const instance = ConfigManager.CreateConfigManagerInstance();
+        expect(instance.get('INVALID_KEY')).toBeUndefined();
     });
 
-    it('should return the app name when "appName" key is used', async () => {
-        process.env['test'] = JSON.stringify(mockEnv);
+    it('should return the environment when "env" getter is used', () => {
+        const instance = ConfigManager.CreateConfigManagerInstance();
+        expect(instance.env).toBe('test' as Environment);
+    });
+});
 
-        const instance = await ConfigManager.CreateConfigManagerInstance('test');
-        const appName = instance.get('appName');
-
-        expect(appName).toBe('TestApp');
+describe('ConfigManager error cases', () => {
+    const originalProcessEnv = process.env;
+    beforeAll(() => {
+        Object.keys(process.env).forEach((key) => {
+            delete process.env[key];
+        });
+        Object.assign(process.env, originalProcessEnv);
     });
 
-    it('should return the entire configuration when no key is used', async () => {
-        process.env['test'] = JSON.stringify(mockEnv);
+    it('should throw error if appName or environment not provided', () => {
+        Promise.resolve(() => {
+            process.env.appName = undefined;
+        }).then(() => {
+            try {
+                (ConfigManager as any).ConfigManagerInstance = null
+                const mgr = ConfigManager.CreateConfigManagerInstance();
+                if (!mgr) {
+                    fail()
+                }
+            } catch (e) {
+                expect(e).toEqual(new Error('ConfigManager: appName and environment are mandatory. Please provide them in .env file'));
+            }
+        })
+    });
+});
 
-        const instance = await ConfigManager.CreateConfigManagerInstance('test');
-        const config = instance.get();
 
-        expect(config).toEqual(mockEnv.configuration);
+describe('ConfigManager cases', () => {
+    beforeEach(() => {
+        process.env.REACT_APP_appName = 'testApp2';
+        process.env.REACT_APP_environment = 'test2';
+        process.env.REACT_APP_TEST_KEY = 'TEST_VALUE2';
+    })
+
+    it('should return the config object with prefix', () => {
+        (ConfigManager as any).ConfigManagerInstance = null
+        const instance = ConfigManager.CreateConfigManagerInstance('REACT_APP_');
+        expect((instance.get() as IAppConfig).appName).toBe('testApp2');
+        expect((instance.get() as IAppConfig).environment).toBe('test2');
+        expect((instance.get() as IAppConfig)['TEST_KEY']).toBe('TEST_VALUE2');
     });
 });
